@@ -76,29 +76,29 @@
 
 ### 2.4 核心关联说明
 
-| 业务模块 | 核心关系 | 说明 |
-| -------- | -------- | ---- |
-| **图书资源** | `categories` → `books` → `chapters` | 分类下有书，书下有章节 |
-| **个人阅读** | `users` → `bookshelf` / `notes` / `reading_records` | 用户产生书架、笔记、阅读记录 |
-| **商城订单** | `users` → `shopping_cart` / `orders` → `order_items` | 用户购物车、订单及订单明细 |
-| **优惠券** | `users` → `user_coupons` → `coupons` | 用户领取的券实例指向券模板 |
-| **论坛社区** | `users` → `posts` → `comments` | 用户发帖，帖子下有多条评论 |
+| 业务模块           | 核心关系                                                       | 说明                         |
+| ------------------ | -------------------------------------------------------------- | ---------------------------- |
+| **图书资源** | `categories` → `books` → `chapters`                    | 分类下有书，书下有章节       |
+| **个人阅读** | `users` → `bookshelf` / `notes` / `reading_records`   | 用户产生书架、笔记、阅读记录 |
+| **商城订单** | `users` → `shopping_cart` / `orders` → `order_items` | 用户购物车、订单及订单明细   |
+| **优惠券**   | `users` → `user_coupons` → `coupons`                   | 用户领取的券实例指向券模板   |
+| **论坛社区** | `users` → `posts` → `comments`                         | 用户发帖，帖子下有多条评论   |
 
 ### 2.5 关键关联字段速查
 
-| 子表 | 外键字段 | 指向主表 | 业务含义 |
-| ---- | -------- | -------- | -------- |
-| `books` | `category_id` | `categories.category_id` | 书属于哪个分类 |
-| `chapters` | `book_id` | `books.book_id` | 章节属于哪本书 |
-| `bookshelf` | `user_id` / `book_id` | `users.user_id` / `books.book_id` | 哪个用户收藏了哪本书 |
-| `notes` | `user_id` / `book_id` / `chapter_id` | 对应主键 | 哪个用户在哪本书哪一章写了笔记 |
-| `reading_records` | `user_id` / `book_id` / `chapter_id` | 对应主键 | 哪个用户读了哪本书哪一章多久 |
-| `shopping_cart` | `user_id` / `book_id` | 对应主键 | 哪个用户把哪本书加入了购物车 |
-| `orders` | `user_id` / `coupon_id` | `users.user_id` / `coupons.coupon_id` | 哪个用户用了哪张券下单 |
-| `order_items` | `order_id` / `book_id` | `orders.order_id` / `books.book_id` | 订单里包含哪些书 |
-| `user_coupons` | `user_id` / `coupon_id` / `used_order_id` | 对应主键 | 用户领了哪张券，用在了哪个订单 |
-| `posts` | `user_id` / `book_id` | 对应主键 | 谁发的帖，关联了哪本书（可选） |
-| `comments` | `post_id` / `user_id` / `parent_id` | 对应主键 | 哪个用户评论了哪个帖子，回复了哪条评论 |
+| 子表                | 外键字段                                        | 指向主表                                  | 业务含义                               |
+| ------------------- | ----------------------------------------------- | ----------------------------------------- | -------------------------------------- |
+| `books`           | `category_id`                                 | `categories.category_id`                | 书属于哪个分类                         |
+| `chapters`        | `book_id`                                     | `books.book_id`                         | 章节属于哪本书                         |
+| `bookshelf`       | `user_id` / `book_id`                       | `users.user_id` / `books.book_id`     | 哪个用户收藏了哪本书                   |
+| `notes`           | `user_id` / `book_id` / `chapter_id`      | 对应主键                                  | 哪个用户在哪本书哪一章写了笔记         |
+| `reading_records` | `user_id` / `book_id` / `chapter_id`      | 对应主键                                  | 哪个用户读了哪本书哪一章多久           |
+| `shopping_cart`   | `user_id` / `book_id`                       | 对应主键                                  | 哪个用户把哪本书加入了购物车           |
+| `orders`          | `user_id` / `coupon_id`                     | `users.user_id` / `coupons.coupon_id` | 哪个用户用了哪张券下单                 |
+| `order_items`     | `order_id` / `book_id`                      | `orders.order_id` / `books.book_id`   | 订单里包含哪些书                       |
+| `user_coupons`    | `user_id` / `coupon_id` / `used_order_id` | 对应主键                                  | 用户领了哪张券，用在了哪个订单         |
+| `posts`           | `user_id` / `book_id`                       | 对应主键                                  | 谁发的帖，关联了哪本书（可选）         |
+| `comments`        | `post_id` / `user_id` / `parent_id`       | 对应主键                                  | 哪个用户评论了哪个帖子，回复了哪条评论 |
 
 ---
 

@@ -16,3 +16,10 @@ desktop.ini
 
 # Axure backup files
 *.rp.bak
+
+# Node.js
+node_modules/
+dist/
+
+# Environment variables
+.env

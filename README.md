@@ -212,7 +212,64 @@
 
 > 说明：本作品集阶段已完成数据库表结构与 API 接口设计文档，技术实现方案明确，可直接进入开发。
 
-### 5.6 测试与上线
+### 5.6 可运行 Demo（新增）
+
+为验证产品方案的可行性，已基于设计文档实现了一套可本地运行的前后端 Demo。
+
+**技术栈**
+
+| 端   | 技术                             |
+| ---- | -------------------------------- |
+| 前端 | Vite + React + Ant Design Mobile |
+| 后端 | Node.js + Express + MySQL 8      |
+| 鉴权 | JWT                              |
+
+**已覆盖功能**
+
+- 用户注册 / 登录 / JWT 鉴权
+- 书城首页（搜索、分类、热门推荐）
+- 分类列表
+- 图书详情（加入书架、开始阅读）
+- 章节阅读（目录抽屉、字号调节、夜间模式、上一章/下一章、进度保存）
+- 我的书架
+- 我的（个人信息、退出登录）
+- 论坛入口（占位）
+
+**快速启动**
+
+```bash
+# 1. 安装 MySQL 8 并启动服务，记住 root 密码
+
+# 2. 配置后端环境变量
+cd demo/server
+copy .env.example .env   # Windows
+cp .env.example .env     # macOS / Linux
+# 编辑 .env，填写 DB_PASSWORD
+
+# 3. 初始化数据库并启动后端
+npm install
+npm run seed
+npm run dev
+
+# 4. 启动前端（新开终端）
+cd demo/client
+npm install
+npm run dev
+```
+
+- 前端地址：`http://localhost:5173`
+- 后端地址：`http://localhost:3001`
+- 测试账号：`test / 123456`（昵称：聒聒）
+
+**演示说明**
+
+- 前端已固定为移动端 App 尺寸（最大宽度 430px，居中显示），适合在桌面浏览器模拟手机或同一局域网真机访问；
+- 封面、分类、头像等图片已接入本地资源（`demo/server/uploads/`），无需外网即可演示；
+- 购物车、订单、支付、论坛为占位或未实现模块。
+
+> 详细说明见：`demo/Demo小结.md`
+
+### 5.7 测试与上线
 
 - **功能测试**：验证登录、阅读、听书、商城、支付、论坛等核心流程；
 - **异常测试**：网络异常、支付失败、搜索为空、未登录拦截等场景；
@@ -251,7 +308,12 @@
 .
 ├── docs/
 │   ├── DATABASE-DESIGN.md       # MySQL 数据库设计文档（含 ER 图与建表 SQL）
-│   └── API-DESIGN.md            # RESTful API 接口设计文档
+│   ├── API-DESIGN.md            # RESTful API 接口设计文档
+│   └── CO-WORKING-REVIEW.md     # Demo 开发协作复盘
+├── demo/                        # 可运行前后端 Demo
+│   ├── client/                  # React + Vite 前端
+│   ├── server/                  # Express + MySQL 后端
+│   └── README.md                # Demo 运行说明
 ├── assets/
 │   └── screenshots/             # README 中引用的页面预览截图
 ├── PRD文档9.0.2.rp              # 完整版 PRD / 原型（含所有模块）
@@ -267,6 +329,7 @@
 │   └── 绘图4.jpg                # 手绘/概念草图
 ├── 页面切图/                    # 高保真 UI 页面切图（JPG）
 ├── 书籍插图/                    # 示例图书封面与分类插图
+├── 头像.jpg                     # Demo 测试用户头像
 ├── 论坛/                        # 论坛话题/活动相关素材
 ├── 信息框架图.png               # 信息架构图
 ├── 功能架构图.png               # 功能架构图
@@ -304,4 +367,4 @@
 
 ---
 
-*最后更新：2026-07-02*
+*最后更新：2026-07-02（新增 demo/ 可运行 Demo 与协作复盘文档）*
