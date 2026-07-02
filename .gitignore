@@ -1,0 +1,18 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Axure backup files
+*.rp.bak
