@@ -1,0 +1,204 @@
+// 汇读 APP 数据库 ER 图
+// dbdiagram.io 源文件
+// 14 张核心表，突出核心关联
+
+Table users {
+  user_id int [pk, increment, note: '用户唯一ID']
+  username varchar(50) [not null, unique, note: '用户名']
+  password varchar(255) [not null, note: '加密密码（BCrypt）']
+  nickname varchar(50) [note: '昵称']
+  avatar varchar(255) [note: '头像URL']
+  email varchar(100) [note: '邮箱']
+  phone varchar(20) [note: '手机号']
+  is_vip tinyint [default: 0, note: '是否VIP: 0否 1是']
+  vip_expire_date datetime [note: 'VIP到期时间']
+  status tinyint [default: 1, note: '状态: 0禁用 1正常']
+  created_at timestamp [note: '创建时间']
+  updated_at timestamp [note: '更新时间']
+}
+
+Table categories {
+  category_id int [pk, increment, note: '分类ID']
+  parent_id int [default: 0, note: '父分类ID，0为一级分类']
+  name varchar(50) [not null, note: '分类名称']
+  icon varchar(255) [note: '分类图标URL']
+  sort_order int [default: 0, note: '排序']
+  status tinyint [default: 1, note: '状态: 0禁用 1启用']
+  created_at timestamp [note: '创建时间']
+}
+
+Table books {
+  book_id int [pk, increment, note: '图书ID']
+  title varchar(200) [not null, note: '书名']
+  author varchar(100) [note: '作者']
+  cover varchar(255) [note: '封面URL']
+  category_id int [note: '分类ID']
+  price decimal [note: '售价']
+  original_price decimal [note: '原价']
+  is_ebook tinyint [default: 1, note: '是否有电子书: 0否 1是']
+  is_audiobook tinyint [default: 0, note: '是否有声书: 0否 1是']
+  summary text [note: '图书简介']
+  publisher varchar(100) [note: '出版社']
+  isbn varchar(20) [note: 'ISBN']
+  word_count int [note: '字数']
+  status tinyint [default: 1, note: '状态: 0下架 1上架']
+  created_at timestamp [note: '创建时间']
+}
+
+Table chapters {
+  chapter_id int [pk, increment, note: '章节ID']
+  book_id int [not null, note: '所属图书ID']
+  chapter_no int [not null, note: '章节序号']
+  title varchar(200) [note: '章节标题']
+  content longtext [note: '章节文本内容']
+  audio_url varchar(255) [note: '音频URL']
+  is_free tinyint [default: 1, note: '是否免费: 0付费 1免费']
+  created_at timestamp [note: '创建时间']
+}
+
+Table bookshelf {
+  id int [pk, increment, note: '主键']
+  user_id int [not null, note: '用户ID']
+  book_id int [not null, note: '图书ID']
+  progress int [default: 0, note: '阅读进度百分比']
+  last_chapter_id int [note: '上次阅读章节ID']
+  last_read_position int [default: 0, note: '上次阅读位置']
+  is_favorite tinyint [default: 0, note: '是否收藏: 0否 1是']
+  updated_at timestamp [note: '更新时间']
+}
+
+Table notes {
+  note_id int [pk, increment, note: '笔记ID']
+  user_id int [not null, note: '用户ID']
+  book_id int [not null, note: '图书ID']
+  chapter_id int [note: '章节ID']
+  content text [note: '笔记内容']
+  selected_text varchar(500) [note: '划选原文']
+  is_public tinyint [default: 0, note: '是否公开: 0私密 1公开']
+  created_at timestamp [note: '创建时间']
+}
+
+Table reading_records {
+  record_id bigint [pk, increment, note: '记录ID']
+  user_id int [not null, note: '用户ID']
+  book_id int [not null, note: '图书ID']
+  chapter_id int [note: '章节ID']
+  duration int [default: 0, note: '阅读时长(秒)']
+  read_date date [not null, note: '阅读日期']
+  created_at timestamp [note: '创建时间']
+}
+
+Table coupons {
+  coupon_id int [pk, increment, note: '优惠券ID']
+  name varchar(100) [note: '优惠券名称']
+  type tinyint [not null, note: '类型: 1满减 2折扣']
+  threshold decimal [default: 0, note: '使用门槛']
+  value decimal [not null, note: '优惠金额或折扣']
+  valid_start datetime [note: '有效期开始']
+  valid_end datetime [note: '有效期结束']
+  total_count int [default: 0, note: '发放总数']
+  status tinyint [default: 1, note: '状态: 0禁用 1启用']
+  created_at timestamp [note: '创建时间']
+}
+
+Table user_coupons {
+  id int [pk, increment, note: '主键']
+  user_id int [not null, note: '用户ID']
+  coupon_id int [not null, note: '优惠券ID']
+  status tinyint [default: 0, note: '状态: 0未使用 1已使用 2已过期']
+  used_order_id int [note: '使用订单ID']
+  valid_end datetime [note: '有效期结束']
+  created_at timestamp [note: '领取时间']
+}
+
+Table orders {
+  order_id int [pk, increment, note: '订单ID']
+  order_no varchar(32) [not null, unique, note: '订单编号']
+  user_id int [not null, note: '用户ID']
+  total_amount decimal [not null, note: '订单总金额']
+  discount_amount decimal [default: 0, note: '优惠金额']
+  pay_amount decimal [not null, note: '实付金额']
+  coupon_id int [note: '使用优惠券ID']
+  status tinyint [default: 0, note: '状态: 0待支付 1已支付 2已发货 3已完成 4已取消']
+  pay_time datetime [note: '支付时间']
+  created_at timestamp [note: '创建时间']
+  updated_at timestamp [note: '更新时间']
+}
+
+Table order_items {
+  item_id int [pk, increment, note: '明细ID']
+  order_id int [not null, note: '订单ID']
+  book_id int [not null, note: '图书ID']
+  book_title varchar(200) [note: '图书标题快照']
+  book_cover varchar(255) [note: '图书封面快照']
+  price decimal [not null, note: '单价']
+  quantity int [default: 1, note: '数量']
+}
+
+Table shopping_cart {
+  cart_id int [pk, increment, note: '主键']
+  user_id int [not null, note: '用户ID']
+  book_id int [not null, note: '图书ID']
+  quantity int [default: 1, note: '数量']
+  is_selected tinyint [default: 1, note: '是否选中: 0否 1是']
+  created_at timestamp [note: '创建时间']
+  updated_at timestamp [note: '更新时间']
+}
+
+Table posts {
+  post_id int [pk, increment, note: '帖子ID']
+  user_id int [not null, note: '发布用户ID']
+  book_id int [note: '关联图书ID']
+  title varchar(200) [note: '标题']
+  content text [note: '内容']
+  cover varchar(255) [note: '封面图URL']
+  topic_tag varchar(50) [note: '话题标签']
+  like_count int [default: 0, note: '点赞数']
+  comment_count int [default: 0, note: '评论数']
+  is_top tinyint [default: 0, note: '是否置顶: 0否 1是']
+  status tinyint [default: 1, note: '状态: 0禁用 1正常']
+  created_at timestamp [note: '创建时间']
+}
+
+Table comments {
+  comment_id int [pk, increment, note: '评论ID']
+  post_id int [not null, note: '所属帖子ID']
+  user_id int [not null, note: '评论用户ID']
+  parent_id int [default: 0, note: '父评论ID, 0为一级评论']
+  content text [note: '评论内容']
+  like_count int [default: 0, note: '点赞数']
+  status tinyint [default: 1, note: '状态: 0禁用 1正常']
+  created_at timestamp [note: '创建时间']
+}
+
+// ==================== 核心关联 ====================
+
+// 图书资源
+Ref: books.category_id > categories.category_id
+Ref: chapters.book_id > books.book_id
+
+// 个人阅读
+Ref: bookshelf.user_id > users.user_id
+Ref: bookshelf.book_id > books.book_id
+Ref: notes.user_id > users.user_id
+Ref: notes.book_id > books.book_id
+Ref: notes.chapter_id > chapters.chapter_id
+Ref: reading_records.user_id > users.user_id
+Ref: reading_records.book_id > books.book_id
+Ref: reading_records.chapter_id > chapters.chapter_id
+
+// 商城订单
+Ref: shopping_cart.user_id > users.user_id
+Ref: shopping_cart.book_id > books.book_id
+Ref: orders.user_id > users.user_id
+Ref: order_items.order_id > orders.order_id
+Ref: order_items.book_id > books.book_id
+Ref: user_coupons.user_id > users.user_id
+Ref: user_coupons.coupon_id > coupons.coupon_id
+Ref: user_coupons.used_order_id > orders.order_id
+
+// 论坛社区
+Ref: posts.user_id > users.user_id
+Ref: posts.book_id > books.book_id
+Ref: comments.post_id > posts.post_id
+Ref: comments.user_id > users.user_id

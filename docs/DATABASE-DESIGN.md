@@ -1,6 +1,6 @@
 # 汇读 · 智能阅读服务系统 —— 数据库设计文档
 
-> 本文档为「汇读」APP 的后端数据存储方案，采用 MySQL 8.0 关系型数据库设计，覆盖用户、图书、阅读、订单、论坛等核心业务实体。
+> 本文档为「汇读」APP 的后端数据存储方案，采用 MySQL 覆盖用户、图书、阅读、订单、论坛等核心业务实体。
 
 ---
 
@@ -15,6 +15,14 @@
 ---
 
 ## 二、实体关系（ER 图）
+
+### 2.1 高清 ER 图
+
+![汇读 APP 数据库 ER 图](er-diagram.png)
+
+> 源文件：`docs/er-diagram.dbml`（dbdiagram.io 可直接导入）；PDF 版本：`docs/er-diagram.pdf`。
+
+### 2.2 核心实体关系总览
 
 ```
 ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
@@ -31,15 +39,15 @@
        │ └──────┬──────┘                    └──────┬──────┘
        │        │                                  │
        │        ▼                                  ▼
-       │   ┌─────────────┐                   ┌─────────────┐
-       └──▶│    notes    │◀──────────────────│reading_records│
-           │  (笔记表)   │                   │ (阅读记录表) │
-           └─────────────┘                   └─────────────┘
+       │   ┌─────────────┐                     ┌─────────────┐
+       └──▶│    notes   │◀────────────────── │reading_records│
+           │  (笔记表)    │                    │ (阅读记录表) │
+           └─────────────┘                     └─────────────┘
        │
-       │    ┌─────────────┐       ┌─────────────┐
+       │     ┌─────────────┐        ┌─────────────┐
        └───▶│    orders   │◀──────│ order_items │
-              │  (订单表)   │       │ (订单明细表) │
-              └──────┬──────┘       └─────────────┘
+             │  (订单表)   │        │ (订单明细表) │
+             └──────┬──────┘        └─────────────┘
                      │
                      ▼
               ┌─────────────┐
@@ -47,13 +55,50 @@
               │  (购物车表)  │
               └─────────────┘
        │
-       │    ┌─────────────┐       ┌─────────────┐
+       │     ┌─────────────┐        ┌─────────────┐
        └───▶│    posts    │◀──────│  comments   │
-              │  (帖子表)   │       │  (评论表)   │
-              └─────────────┘       └─────────────┘
+             │  (帖子表)   │        │  (评论表)   │
+             └─────────────┘        └─────────────┘
 ```
 
-> 说明：上图展示核心实体关系，实际 ER 图见 `docs/er-diagram.png`（可用 dbdiagram.io / MySQL Workbench 生成）。
+### 2.3 业务场景注解：用户「聒聒」的一天
+
+用一个完整用户旅程来理解 14 张表如何协作：
+
+1. **注册登录**：聒聒注册账号 → 数据进入 `users`
+2. **逛书城**：看到「文学」分类下的《简爱》→ `categories` + `books` + `chapters`
+3. **加入书架**：把《简爱》加入书架 → `bookshelf` 记录聒聒和这本书的关联
+4. **开始阅读**：读到第三章 → `reading_records` 记录阅读时长，`bookshelf` 更新进度
+5. **做笔记**：划线写下感想 → `notes` 关联聒聒、图书、章节
+6. **加入购物车**：想买实体书 → `shopping_cart` 记录待购商品
+7. **下单支付**：用优惠券生成订单 → `orders` + `order_items` + `user_coupons` + `coupons`
+8. **逛论坛**：发帖《读完简爱，谈谈我的感受》→ `posts` + `comments`
+
+### 2.4 核心关联说明
+
+| 业务模块 | 核心关系 | 说明 |
+| -------- | -------- | ---- |
+| **图书资源** | `categories` → `books` → `chapters` | 分类下有书，书下有章节 |
+| **个人阅读** | `users` → `bookshelf` / `notes` / `reading_records` | 用户产生书架、笔记、阅读记录 |
+| **商城订单** | `users` → `shopping_cart` / `orders` → `order_items` | 用户购物车、订单及订单明细 |
+| **优惠券** | `users` → `user_coupons` → `coupons` | 用户领取的券实例指向券模板 |
+| **论坛社区** | `users` → `posts` → `comments` | 用户发帖，帖子下有多条评论 |
+
+### 2.5 关键关联字段速查
+
+| 子表 | 外键字段 | 指向主表 | 业务含义 |
+| ---- | -------- | -------- | -------- |
+| `books` | `category_id` | `categories.category_id` | 书属于哪个分类 |
+| `chapters` | `book_id` | `books.book_id` | 章节属于哪本书 |
+| `bookshelf` | `user_id` / `book_id` | `users.user_id` / `books.book_id` | 哪个用户收藏了哪本书 |
+| `notes` | `user_id` / `book_id` / `chapter_id` | 对应主键 | 哪个用户在哪本书哪一章写了笔记 |
+| `reading_records` | `user_id` / `book_id` / `chapter_id` | 对应主键 | 哪个用户读了哪本书哪一章多久 |
+| `shopping_cart` | `user_id` / `book_id` | 对应主键 | 哪个用户把哪本书加入了购物车 |
+| `orders` | `user_id` / `coupon_id` | `users.user_id` / `coupons.coupon_id` | 哪个用户用了哪张券下单 |
+| `order_items` | `order_id` / `book_id` | `orders.order_id` / `books.book_id` | 订单里包含哪些书 |
+| `user_coupons` | `user_id` / `coupon_id` / `used_order_id` | 对应主键 | 用户领了哪张券，用在了哪个订单 |
+| `posts` | `user_id` / `book_id` | 对应主键 | 谁发的帖，关联了哪本书（可选） |
+| `comments` | `post_id` / `user_id` / `parent_id` | 对应主键 | 哪个用户评论了哪个帖子，回复了哪条评论 |
 
 ---
 
@@ -61,20 +106,20 @@
 
 ### 3.1 用户表 `users`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `user_id` | INT PK AUTO_INCREMENT | 用户唯一 ID |
-| `username` | VARCHAR(50) UNIQUE NOT NULL | 用户名 |
-| `password` | VARCHAR(255) NOT NULL | 加密密码（BCrypt） |
-| `nickname` | VARCHAR(50) | 昵称 |
-| `avatar` | VARCHAR(255) | 头像 URL |
-| `email` | VARCHAR(100) | 邮箱 |
-| `phone` | VARCHAR(20) | 手机号 |
-| `is_vip` | TINYINT DEFAULT 0 | 是否 VIP：0 否，1 是 |
-| `vip_expire_date` | DATETIME | VIP 到期时间 |
-| `status` | TINYINT DEFAULT 1 | 状态：0 禁用，1 正常 |
-| `created_at` | TIMESTAMP | 创建时间 |
-| `updated_at` | TIMESTAMP | 更新时间 |
+| 字段                | 类型                        | 说明                 |
+| ------------------- | --------------------------- | -------------------- |
+| `user_id`         | INT PK AUTO_INCREMENT       | 用户唯一 ID          |
+| `username`        | VARCHAR(50) UNIQUE NOT NULL | 用户名               |
+| `password`        | VARCHAR(255) NOT NULL       | 加密密码（BCrypt）   |
+| `nickname`        | VARCHAR(50)                 | 昵称                 |
+| `avatar`          | VARCHAR(255)                | 头像 URL             |
+| `email`           | VARCHAR(100)                | 邮箱                 |
+| `phone`           | VARCHAR(20)                 | 手机号               |
+| `is_vip`          | TINYINT DEFAULT 0           | 是否 VIP：0 否，1 是 |
+| `vip_expire_date` | DATETIME                    | VIP 到期时间         |
+| `status`          | TINYINT DEFAULT 1           | 状态：0 禁用，1 正常 |
+| `created_at`      | TIMESTAMP                   | 创建时间             |
+| `updated_at`      | TIMESTAMP                   | 更新时间             |
 
 ```sql
 CREATE TABLE users (
@@ -99,14 +144,14 @@ CREATE TABLE users (
 
 ### 3.2 图书分类表 `categories`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `category_id` | INT PK AUTO_INCREMENT | 分类 ID |
-| `parent_id` | INT DEFAULT 0 | 父分类 ID，0 为一级分类 |
-| `name` | VARCHAR(50) NOT NULL | 分类名称 |
-| `icon` | VARCHAR(255) | 分类图标 |
-| `sort_order` | INT DEFAULT 0 | 排序 |
-| `status` | TINYINT DEFAULT 1 | 状态：0 禁用，1 启用 |
+| 字段            | 类型                  | 说明                    |
+| --------------- | --------------------- | ----------------------- |
+| `category_id` | INT PK AUTO_INCREMENT | 分类 ID                 |
+| `parent_id`   | INT DEFAULT 0         | 父分类 ID，0 为一级分类 |
+| `name`        | VARCHAR(50) NOT NULL  | 分类名称                |
+| `icon`        | VARCHAR(255)          | 分类图标                |
+| `sort_order`  | INT DEFAULT 0         | 排序                    |
+| `status`      | TINYINT DEFAULT 1     | 状态：0 禁用，1 启用    |
 
 ```sql
 CREATE TABLE categories (
@@ -125,23 +170,23 @@ CREATE TABLE categories (
 
 ### 3.3 图书表 `books`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `book_id` | INT PK AUTO_INCREMENT | 图书 ID |
-| `title` | VARCHAR(200) NOT NULL | 书名 |
-| `author` | VARCHAR(100) | 作者 |
-| `cover` | VARCHAR(255) | 封面 URL |
-| `category_id` | INT | 分类 ID |
-| `price` | DECIMAL(10,2) | 售价 |
-| `original_price` | DECIMAL(10,2) | 原价 |
-| `is_ebook` | TINYINT DEFAULT 1 | 是否有电子书：0 否，1 是 |
-| `is_audiobook` | TINYINT DEFAULT 0 | 是否有声书：0 否，1 是 |
-| `summary` | TEXT | 图书简介 |
-| `publisher` | VARCHAR(100) | 出版社 |
-| `isbn` | VARCHAR(20) | ISBN |
-| `word_count` | INT | 字数 |
-| `status` | TINYINT DEFAULT 1 | 状态：0 下架，1 上架 |
-| `created_at` | TIMESTAMP | 创建时间 |
+| 字段               | 类型                  | 说明                     |
+| ------------------ | --------------------- | ------------------------ |
+| `book_id`        | INT PK AUTO_INCREMENT | 图书 ID                  |
+| `title`          | VARCHAR(200) NOT NULL | 书名                     |
+| `author`         | VARCHAR(100)          | 作者                     |
+| `cover`          | VARCHAR(255)          | 封面 URL                 |
+| `category_id`    | INT                   | 分类 ID                  |
+| `price`          | DECIMAL(10,2)         | 售价                     |
+| `original_price` | DECIMAL(10,2)         | 原价                     |
+| `is_ebook`       | TINYINT DEFAULT 1     | 是否有电子书：0 否，1 是 |
+| `is_audiobook`   | TINYINT DEFAULT 0     | 是否有声书：0 否，1 是   |
+| `summary`        | TEXT                  | 图书简介                 |
+| `publisher`      | VARCHAR(100)          | 出版社                   |
+| `isbn`           | VARCHAR(20)           | ISBN                     |
+| `word_count`     | INT                   | 字数                     |
+| `status`         | TINYINT DEFAULT 1     | 状态：0 下架，1 上架     |
+| `created_at`     | TIMESTAMP             | 创建时间                 |
 
 ```sql
 CREATE TABLE books (
@@ -170,16 +215,16 @@ CREATE TABLE books (
 
 ### 3.4 章节表 `chapters`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `chapter_id` | INT PK AUTO_INCREMENT | 章节 ID |
-| `book_id` | INT | 所属图书 ID |
-| `chapter_no` | INT | 章节序号 |
-| `title` | VARCHAR(200) | 章节标题 |
-| `content` | LONGTEXT | 章节内容（电子书） |
-| `audio_url` | VARCHAR(255) | 音频 URL（有声书） |
-| `is_free` | TINYINT DEFAULT 1 | 是否免费：0 付费，1 免费 |
-| `created_at` | TIMESTAMP | 创建时间 |
+| 字段           | 类型                  | 说明                     |
+| -------------- | --------------------- | ------------------------ |
+| `chapter_id` | INT PK AUTO_INCREMENT | 章节 ID                  |
+| `book_id`    | INT                   | 所属图书 ID              |
+| `chapter_no` | INT                   | 章节序号                 |
+| `title`      | VARCHAR(200)          | 章节标题                 |
+| `content`    | LONGTEXT              | 章节内容（电子书）       |
+| `audio_url`  | VARCHAR(255)          | 音频 URL（有声书）       |
+| `is_free`    | TINYINT DEFAULT 1     | 是否免费：0 付费，1 免费 |
+| `created_at` | TIMESTAMP             | 创建时间                 |
 
 ```sql
 CREATE TABLE chapters (
@@ -199,16 +244,16 @@ CREATE TABLE chapters (
 
 ### 3.5 用户书架表 `bookshelf`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | INT PK AUTO_INCREMENT | 主键 |
-| `user_id` | INT | 用户 ID |
-| `book_id` | INT | 图书 ID |
-| `progress` | INT DEFAULT 0 | 阅读进度百分比 |
-| `last_chapter_id` | INT | 上次阅读章节 ID |
-| `last_read_position` | INT DEFAULT 0 | 上次阅读位置（字符偏移） |
-| `is_favorite` | TINYINT DEFAULT 0 | 是否收藏：0 否，1 是 |
-| `updated_at` | TIMESTAMP | 更新时间 |
+| 字段                   | 类型                  | 说明                     |
+| ---------------------- | --------------------- | ------------------------ |
+| `id`                 | INT PK AUTO_INCREMENT | 主键                     |
+| `user_id`            | INT                   | 用户 ID                  |
+| `book_id`            | INT                   | 图书 ID                  |
+| `progress`           | INT DEFAULT 0         | 阅读进度百分比           |
+| `last_chapter_id`    | INT                   | 上次阅读章节 ID          |
+| `last_read_position` | INT DEFAULT 0         | 上次阅读位置（字符偏移） |
+| `is_favorite`        | TINYINT DEFAULT 0     | 是否收藏：0 否，1 是     |
+| `updated_at`         | TIMESTAMP             | 更新时间                 |
 
 ```sql
 CREATE TABLE bookshelf (
@@ -229,16 +274,16 @@ CREATE TABLE bookshelf (
 
 ### 3.6 阅读笔记表 `notes`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `note_id` | INT PK AUTO_INCREMENT | 笔记 ID |
-| `user_id` | INT | 用户 ID |
-| `book_id` | INT | 图书 ID |
-| `chapter_id` | INT | 章节 ID |
-| `content` | TEXT | 笔记内容 |
-| `selected_text` | VARCHAR(500) | 划选的原文 |
-| `is_public` | TINYINT DEFAULT 0 | 是否公开：0 私密，1 公开 |
-| `created_at` | TIMESTAMP | 创建时间 |
+| 字段              | 类型                  | 说明                     |
+| ----------------- | --------------------- | ------------------------ |
+| `note_id`       | INT PK AUTO_INCREMENT | 笔记 ID                  |
+| `user_id`       | INT                   | 用户 ID                  |
+| `book_id`       | INT                   | 图书 ID                  |
+| `chapter_id`    | INT                   | 章节 ID                  |
+| `content`       | TEXT                  | 笔记内容                 |
+| `selected_text` | VARCHAR(500)          | 划选的原文               |
+| `is_public`     | TINYINT DEFAULT 0     | 是否公开：0 私密，1 公开 |
+| `created_at`    | TIMESTAMP             | 创建时间                 |
 
 ```sql
 CREATE TABLE notes (
@@ -259,15 +304,15 @@ CREATE TABLE notes (
 
 ### 3.7 阅读记录表 `reading_records`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `record_id` | BIGINT PK AUTO_INCREMENT | 记录 ID |
-| `user_id` | INT | 用户 ID |
-| `book_id` | INT | 图书 ID |
-| `chapter_id` | INT | 章节 ID |
-| `duration` | INT | 本次阅读时长（秒） |
-| `read_date` | DATE | 阅读日期（用于日历统计） |
-| `created_at` | TIMESTAMP | 创建时间 |
+| 字段           | 类型                     | 说明                     |
+| -------------- | ------------------------ | ------------------------ |
+| `record_id`  | BIGINT PK AUTO_INCREMENT | 记录 ID                  |
+| `user_id`    | INT                      | 用户 ID                  |
+| `book_id`    | INT                      | 图书 ID                  |
+| `chapter_id` | INT                      | 章节 ID                  |
+| `duration`   | INT                      | 本次阅读时长（秒）       |
+| `read_date`  | DATE                     | 阅读日期（用于日历统计） |
+| `created_at` | TIMESTAMP                | 创建时间                 |
 
 ```sql
 CREATE TABLE reading_records (
@@ -287,17 +332,17 @@ CREATE TABLE reading_records (
 
 ### 3.8 优惠券表 `coupons`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `coupon_id` | INT PK AUTO_INCREMENT | 优惠券 ID |
-| `name` | VARCHAR(100) | 优惠券名称 |
-| `type` | TINYINT | 类型：1 满减，2 折扣 |
-| `threshold` | DECIMAL(10,2) | 使用门槛金额 |
-| `value` | DECIMAL(10,2) | 优惠金额/折扣 |
-| `valid_start` | DATETIME | 有效期开始 |
-| `valid_end` | DATETIME | 有效期结束 |
-| `total_count` | INT | 发放总数 |
-| `status` | TINYINT DEFAULT 1 | 状态 |
+| 字段            | 类型                  | 说明                 |
+| --------------- | --------------------- | -------------------- |
+| `coupon_id`   | INT PK AUTO_INCREMENT | 优惠券 ID            |
+| `name`        | VARCHAR(100)          | 优惠券名称           |
+| `type`        | TINYINT               | 类型：1 满减，2 折扣 |
+| `threshold`   | DECIMAL(10,2)         | 使用门槛金额         |
+| `value`       | DECIMAL(10,2)         | 优惠金额/折扣        |
+| `valid_start` | DATETIME              | 有效期开始           |
+| `valid_end`   | DATETIME              | 有效期结束           |
+| `total_count` | INT                   | 发放总数             |
+| `status`      | TINYINT DEFAULT 1     | 状态                 |
 
 ```sql
 CREATE TABLE coupons (
@@ -318,15 +363,15 @@ CREATE TABLE coupons (
 
 ### 3.9 用户优惠券表 `user_coupons`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | INT PK AUTO_INCREMENT | 主键 |
-| `user_id` | INT | 用户 ID |
-| `coupon_id` | INT | 优惠券 ID |
-| `status` | TINYINT DEFAULT 0 | 状态：0 未使用，1 已使用，2 已过期 |
-| `used_order_id` | INT | 使用订单 ID |
-| `valid_end` | DATETIME | 有效期结束 |
-| `created_at` | TIMESTAMP | 领取时间 |
+| 字段              | 类型                  | 说明                               |
+| ----------------- | --------------------- | ---------------------------------- |
+| `id`            | INT PK AUTO_INCREMENT | 主键                               |
+| `user_id`       | INT                   | 用户 ID                            |
+| `coupon_id`     | INT                   | 优惠券 ID                          |
+| `status`        | TINYINT DEFAULT 0     | 状态：0 未使用，1 已使用，2 已过期 |
+| `used_order_id` | INT                   | 使用订单 ID                        |
+| `valid_end`     | DATETIME              | 有效期结束                         |
+| `created_at`    | TIMESTAMP             | 领取时间                           |
 
 ```sql
 CREATE TABLE user_coupons (
@@ -346,19 +391,19 @@ CREATE TABLE user_coupons (
 
 ### 3.10 订单表 `orders`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `order_id` | INT PK AUTO_INCREMENT | 订单 ID |
-| `order_no` | VARCHAR(32) UNIQUE | 订单编号 |
-| `user_id` | INT | 用户 ID |
-| `total_amount` | DECIMAL(10,2) | 订单总金额 |
-| `discount_amount` | DECIMAL(10,2) | 优惠金额 |
-| `pay_amount` | DECIMAL(10,2) | 实付金额 |
-| `coupon_id` | INT | 使用的优惠券 ID |
-| `status` | TINYINT | 状态：0 待支付，1 已支付，2 已发货，3 已完成，4 已取消 |
-| `pay_time` | DATETIME | 支付时间 |
-| `created_at` | TIMESTAMP | 创建时间 |
-| `updated_at` | TIMESTAMP | 更新时间 |
+| 字段                | 类型                  | 说明                                                   |
+| ------------------- | --------------------- | ------------------------------------------------------ |
+| `order_id`        | INT PK AUTO_INCREMENT | 订单 ID                                                |
+| `order_no`        | VARCHAR(32) UNIQUE    | 订单编号                                               |
+| `user_id`         | INT                   | 用户 ID                                                |
+| `total_amount`    | DECIMAL(10,2)         | 订单总金额                                             |
+| `discount_amount` | DECIMAL(10,2)         | 优惠金额                                               |
+| `pay_amount`      | DECIMAL(10,2)         | 实付金额                                               |
+| `coupon_id`       | INT                   | 使用的优惠券 ID                                        |
+| `status`          | TINYINT               | 状态：0 待支付，1 已支付，2 已发货，3 已完成，4 已取消 |
+| `pay_time`        | DATETIME              | 支付时间                                               |
+| `created_at`      | TIMESTAMP             | 创建时间                                               |
+| `updated_at`      | TIMESTAMP             | 更新时间                                               |
 
 ```sql
 CREATE TABLE orders (
@@ -382,15 +427,15 @@ CREATE TABLE orders (
 
 ### 3.11 订单明细表 `order_items`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `item_id` | INT PK AUTO_INCREMENT | 明细 ID |
-| `order_id` | INT | 订单 ID |
-| `book_id` | INT | 图书 ID |
-| `book_title` | VARCHAR(200) | 图书标题（快照） |
-| `book_cover` | VARCHAR(255) | 图书封面（快照） |
-| `price` | DECIMAL(10,2) | 单价 |
-| `quantity` | INT | 数量 |
+| 字段           | 类型                  | 说明             |
+| -------------- | --------------------- | ---------------- |
+| `item_id`    | INT PK AUTO_INCREMENT | 明细 ID          |
+| `order_id`   | INT                   | 订单 ID          |
+| `book_id`    | INT                   | 图书 ID          |
+| `book_title` | VARCHAR(200)          | 图书标题（快照） |
+| `book_cover` | VARCHAR(255)          | 图书封面（快照） |
+| `price`      | DECIMAL(10,2)         | 单价             |
+| `quantity`   | INT                   | 数量             |
 
 ```sql
 CREATE TABLE order_items (
@@ -409,15 +454,15 @@ CREATE TABLE order_items (
 
 ### 3.12 购物车表 `shopping_cart`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `cart_id` | INT PK AUTO_INCREMENT | 主键 |
-| `user_id` | INT | 用户 ID |
-| `book_id` | INT | 图书 ID |
-| `quantity` | INT DEFAULT 1 | 数量 |
-| `is_selected` | TINYINT DEFAULT 1 | 是否选中：0 否，1 是 |
-| `created_at` | TIMESTAMP | 创建时间 |
-| `updated_at` | TIMESTAMP | 更新时间 |
+| 字段            | 类型                  | 说明                 |
+| --------------- | --------------------- | -------------------- |
+| `cart_id`     | INT PK AUTO_INCREMENT | 主键                 |
+| `user_id`     | INT                   | 用户 ID              |
+| `book_id`     | INT                   | 图书 ID              |
+| `quantity`    | INT DEFAULT 1         | 数量                 |
+| `is_selected` | TINYINT DEFAULT 1     | 是否选中：0 否，1 是 |
+| `created_at`  | TIMESTAMP             | 创建时间             |
+| `updated_at`  | TIMESTAMP             | 更新时间             |
 
 ```sql
 CREATE TABLE shopping_cart (
@@ -437,20 +482,20 @@ CREATE TABLE shopping_cart (
 
 ### 3.13 论坛帖子表 `posts`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `post_id` | INT PK AUTO_INCREMENT | 帖子 ID |
-| `user_id` | INT | 发布用户 ID |
-| `book_id` | INT | 关联图书 ID（可选） |
-| `title` | VARCHAR(200) | 标题 |
-| `content` | TEXT | 内容 |
-| `cover` | VARCHAR(255) | 封面图 |
-| `topic_tag` | VARCHAR(50) | 话题标签 |
-| `like_count` | INT DEFAULT 0 | 点赞数 |
-| `comment_count` | INT DEFAULT 0 | 评论数 |
-| `is_top` | TINYINT DEFAULT 0 | 是否置顶 |
-| `status` | TINYINT DEFAULT 1 | 状态：0 禁用，1 正常 |
-| `created_at` | TIMESTAMP | 创建时间 |
+| 字段              | 类型                  | 说明                 |
+| ----------------- | --------------------- | -------------------- |
+| `post_id`       | INT PK AUTO_INCREMENT | 帖子 ID              |
+| `user_id`       | INT                   | 发布用户 ID          |
+| `book_id`       | INT                   | 关联图书 ID（可选）  |
+| `title`         | VARCHAR(200)          | 标题                 |
+| `content`       | TEXT                  | 内容                 |
+| `cover`         | VARCHAR(255)          | 封面图               |
+| `topic_tag`     | VARCHAR(50)           | 话题标签             |
+| `like_count`    | INT DEFAULT 0         | 点赞数               |
+| `comment_count` | INT DEFAULT 0         | 评论数               |
+| `is_top`        | TINYINT DEFAULT 0     | 是否置顶             |
+| `status`        | TINYINT DEFAULT 1     | 状态：0 禁用，1 正常 |
+| `created_at`    | TIMESTAMP             | 创建时间             |
 
 ```sql
 CREATE TABLE posts (
@@ -476,16 +521,16 @@ CREATE TABLE posts (
 
 ### 3.14 评论表 `comments`
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `comment_id` | INT PK AUTO_INCREMENT | 评论 ID |
-| `post_id` | INT | 所属帖子 ID |
-| `user_id` | INT | 评论用户 ID |
-| `parent_id` | INT DEFAULT 0 | 父评论 ID，0 为一级评论 |
-| `content` | TEXT | 评论内容 |
-| `like_count` | INT DEFAULT 0 | 点赞数 |
-| `status` | TINYINT DEFAULT 1 | 状态 |
-| `created_at` | TIMESTAMP | 创建时间 |
+| 字段           | 类型                  | 说明                    |
+| -------------- | --------------------- | ----------------------- |
+| `comment_id` | INT PK AUTO_INCREMENT | 评论 ID                 |
+| `post_id`    | INT                   | 所属帖子 ID             |
+| `user_id`    | INT                   | 评论用户 ID             |
+| `parent_id`  | INT DEFAULT 0         | 父评论 ID，0 为一级评论 |
+| `content`    | TEXT                  | 评论内容                |
+| `like_count` | INT DEFAULT 0         | 点赞数                  |
+| `status`     | TINYINT DEFAULT 1     | 状态                    |
+| `created_at` | TIMESTAMP             | 创建时间                |
 
 ```sql
 CREATE TABLE comments (
@@ -504,9 +549,9 @@ CREATE TABLE comments (
 
 ---
 
-## 四、关键查询示例
+## 四、关键查询示例（以用户「聒聒」为例）
 
-### 4.1 查询用户书架
+### 4.1 查询聒聒的收藏书架
 
 ```sql
 SELECT b.book_id, b.title, b.cover, b.author, bs.progress, bs.updated_at
@@ -516,7 +561,9 @@ WHERE bs.user_id = 1 AND bs.is_favorite = 1
 ORDER BY bs.updated_at DESC;
 ```
 
-### 4.2 统计用户阅读时长（按天）
+> 场景：聒聒打开 APP，在「书架」页看到自己收藏的所有书，按最近阅读时间倒序排列。
+
+### 4.2 统计聒聒 12 月的阅读时长（按天）
 
 ```sql
 SELECT read_date, SUM(duration) AS total_duration
@@ -526,7 +573,9 @@ GROUP BY read_date
 ORDER BY read_date;
 ```
 
-### 4.3 查询订单及明细
+> 场景：聒聒在「我的 → 阅读统计」里查看 12 月每天的阅读时长，生成阅读日历。
+
+### 4.3 查询聒聒的订单及明细
 
 ```sql
 SELECT o.order_id, o.order_no, o.total_amount, o.pay_amount, o.status,
@@ -536,6 +585,31 @@ JOIN order_items oi ON o.order_id = oi.order_id
 WHERE o.user_id = 1
 ORDER BY o.created_at DESC;
 ```
+
+> 场景：聒聒在「我的 → 订单」里查看历史订单，点击订单能看到买了哪些书、每本书当时的名称和价格。
+
+### 4.4 查询聒聒未使用的优惠券
+
+```sql
+SELECT c.coupon_id, c.name, c.type, c.threshold, c.value, uc.valid_end
+FROM user_coupons uc
+JOIN coupons c ON uc.coupon_id = c.coupon_id
+WHERE uc.user_id = 1 AND uc.status = 0 AND uc.valid_end > NOW();
+```
+
+> 场景：聒聒结算时，系统列出他还能用的优惠券，自动推荐最划算的一张。
+
+### 4.5 查询某本书下的公开笔记
+
+```sql
+SELECT n.note_id, u.nickname, n.selected_text, n.content, n.created_at
+FROM notes n
+JOIN users u ON n.user_id = u.user_id
+WHERE n.book_id = 1 AND n.is_public = 1
+ORDER BY n.created_at DESC;
+```
+
+> 场景：聒聒在《简爱》详情页看到其他读者的公开划线笔记，增强阅读互动感。
 
 ---
 
