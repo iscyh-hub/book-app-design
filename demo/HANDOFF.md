@@ -2,9 +2,11 @@
 
 ## 当前状态
 
-已基于 `docs/API-DESIGN.md` 和 `docs/DATABASE-DESIGN.md` 完成 Demo 的代码骨架与核心功能实现。前端已能成功构建，后端可正常启动。
+已基于 `docs/API-DESIGN.md` 和 `docs/DATABASE-DESIGN.md` 完成 Demo 的代码骨架与核心功能实现。**本机 MySQL 已安装，数据库已初始化，前后端已联调通过。**
 
-当前环境（本机）尚未安装 MySQL，因此**数据库初始化与端到端联调还未跑通**。你只需安装 MySQL 后按下方步骤执行即可。
+- 前端：`http://localhost:5173`
+- 后端：`http://localhost:3001`
+- 测试账号：`test / 123456`（昵称：聒聒）
 
 ---
 
@@ -29,6 +31,10 @@
   - `seed/init.sql` — 14 张表（复用 `docs/DATABASE-DESIGN.md`）
   - `seed/seed.sql` — 6 本公版书、3 章/本、5 个分类
   - `seed/seed.js` — 一键建库、建表、插数据、创建测试用户
+- 已修复问题：
+  - `seed.js` 使用 `connection.query()` 执行 `USE` 与 SQL 文件，避免 `ER_UNSUPPORTED_PS`
+  - `seed.js` 每次运行先 `DROP DATABASE IF EXISTS huidu`，避免重复初始化主键冲突
+  - `routes/books.js` 修复 `LIMIT ? OFFSET ?` 预处理参数类型错误
 
 ### 前端（`demo/client/`）
 
@@ -43,52 +49,41 @@
   - 我的书架
   - 我的（个人信息、退出登录）
   - 论坛（占位）
+- 已修复 / 优化：
+  - 前端固定为移动端 App 尺寸（最大宽度 430px，居中显示）
+  - 底部导航、图书详情底部操作栏限制在 App 容器宽度内
+  - 阅读页目录抽屉挂载到 `.app` 容器，从 App 左侧滑出
+  - 阅读页返回按钮统一回到图书详情页
+  - 书城首页分类文字与图标居中对齐
+  - 移除书城首页无意义的返回箭头
+  - `vite.config.js` 增加 `/uploads` 代理到后端，本地图片可正常显示
+
+### 图片资源
+
+- 封面图：已接入本地 `demo/server/uploads/covers/`
+- 分类图标：已接入本地 `demo/server/uploads/categories/`
+- 测试用户头像：已接入本地 `demo/server/uploads/avatars/`
 
 ---
 
-## 你接下来要做的
+## 启动方式
 
-### 1. 安装 MySQL 8
+### 1. 确认 MySQL 8 服务在运行
 
-推荐下载官方 Installer：
-https://dev.mysql.com/downloads/installer/
+确保 root 密码与 `demo/server/.env` 中 `DB_PASSWORD` 一致。
 
-安装时记住 root 密码，并确保 MySQL 服务在运行。
-
-### 2. 配置后端数据库密码
-
-编辑 `demo/server/.env`：
-
-```env
-PORT=3001
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=你的root密码
-DB_NAME=huidu
-JWT_SECRET=huidu_demo_secret_key_2024
-```
-
-### 3. 初始化数据库
+### 2. 启动后端
 
 ```bash
 cd demo/server
 npm install        # 如果还没装
-npm run seed
-```
-
-成功后，MySQL 中会出现 `huidu` 数据库、14 张表、6 本书、18 个章节、1 个测试用户 `test / 123456`（昵称：聒聒）。
-
-### 4. 启动后端
-
-```bash
-cd demo/server
+npm run seed       # 如需重置数据库
 npm run dev
 ```
 
 看到 `汇读后端服务已启动: http://localhost:3001` 即成功。
 
-### 5. 启动前端
+### 3. 启动前端
 
 新开一个终端：
 
@@ -100,7 +95,7 @@ npm run dev
 
 浏览器访问 `http://localhost:5173`。
 
-### 6. 真机演示（可选）
+### 4. 真机演示（可选）
 
 - 电脑和手机连同一 Wi-Fi；
 - 获取电脑局域网 IP（`ipconfig`）；
@@ -111,10 +106,10 @@ npm run dev
 
 ## 已知问题 / 注意事项
 
-1. **封面图使用的是 `placehold.co` 在线占位图**。如果你要在无网络环境演示，需要把 `书籍插图/` 里的图片复制到 `demo/server/uploads/covers/`，并修改 `seed/seed.sql` 中的 `cover` 字段为本地路径。
-2. **未接真实支付**：购物车、订单、支付模块在 MVP 中未实现，论坛也是占位状态。
-3. **静态资源**：`demo/server/uploads/` 目前为空，后端已配置 `/uploads` 静态资源路由，后续可直接放本地图片。
-4. **HTTPS**：本地演示用 HTTP，部署到云服务器后再配 HTTPS。
+1. **未接真实支付**：购物车、订单、支付模块在 MVP 中未实现，论坛也是占位状态。
+2. **HTTPS**：本地演示用 HTTP，部署到云服务器后再配 HTTPS。
+3. **图片资源**：已改为本地静态资源，存放于 `demo/server/uploads/`，如需新增图片可直接放入对应目录并修改 `seed/seed.sql` 后重新执行 `npm run seed`。
+4. **数据库重置**：`npm run seed` 会删除并重建 `huidu` 数据库，生产环境请勿使用。
 
 ---
 
@@ -126,12 +121,16 @@ npm run dev
 | `demo/server/.env` | 后端环境变量（需填写 DB 密码） |
 | `demo/server/seed/init.sql` | 14 张建表 SQL |
 | `demo/server/seed/seed.sql` | 种子数据 |
-| `demo/server/routes/*.js` | 各模块接口实现 |
+| `demo/server/seed/seed.js` | 一键初始化数据库 |
 | `demo/client/.env` | 前端 API 地址 |
+| `demo/client/vite.config.js` | Vite 配置（含 `/uploads` 代理） |
 | `demo/client/src/router.jsx` | 前端路由 |
 | `demo/client/src/api/*.js` | 前端 API 封装 |
 | `demo/client/src/pages/*.jsx` | 前端页面 |
-| `demo/README.md` | 运行说明 |
+| `demo/client/src/index.css` | 全局样式（固定 App 尺寸） |
+| `demo/README.md` | Demo 运行说明 |
+| `docs/CO-WORKING-REVIEW.md` | 本次开发协作复盘 |
+| `README.md` | 项目总览（含 Demo 介绍） |
 
 ---
 
