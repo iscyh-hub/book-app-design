@@ -2,10 +2,11 @@
 
 ## 当前状态
 
-已基于 `docs/API-DESIGN.md` 和 `docs/DATABASE-DESIGN.md` 完成 Demo 的代码骨架与核心功能实现。**本机 MySQL 已安装，数据库已初始化，前后端已联调通过。**
+已基于 `docs/API-DESIGN.md` 和 `docs/DATABASE-DESIGN.md` 完成 Demo 的代码骨架与核心功能实现。**本机 MySQL 已安装，数据库已初始化，前后端已联调通过；静态版 Demo 已部署到 GitHub Pages。**
 
-- 前端：`http://localhost:5173`
-- 后端：`http://localhost:3001`
+- 在线静态版：`https://iscyh-hub.github.io/book-app-design/`
+- 本地开发前端：`http://localhost:5173`
+- 本地开发后端：`http://localhost:3001`
 - 测试账号：`test / 123456`（昵称：聒聒）
 
 ---
@@ -106,10 +107,11 @@ npm run dev
 
 ## 已知问题 / 注意事项
 
-1. **未接真实支付**：购物车、订单、支付模块在 MVP 中未实现，论坛也是占位状态。
-2. **HTTPS**：本地演示用 HTTP，部署到云服务器后再配 HTTPS。
-3. **图片资源**：已改为本地静态资源，存放于 `demo/server/uploads/`，如需新增图片可直接放入对应目录并修改 `seed/seed.sql` 后重新执行 `npm run seed`。
-4. **数据库重置**：`npm run seed` 会删除并重建 `huidu` 数据库，生产环境请勿使用。
+1. **静态版 Demo**：GitHub Pages 部署的是 Mock 数据版，登录、书架、阅读进度均模拟实现，数据保存在浏览器本地；购物车、订单、支付、论坛仍为占位或未实现。
+2. **全栈版仍需本地运行**：如果需要真实后端 + MySQL，仍需按下方"启动方式"在本地启动前后端。
+3. **HTTPS**：本地演示用 HTTP，部署到云服务器后再配 HTTPS。
+4. **图片资源**：已改为本地静态资源，存放于 `demo/server/uploads/` 和 `demo/client/public/uploads/`，如需新增图片可直接放入对应目录并修改 `seed/seed.sql` 或 `demo/client/src/api/mockData.js`。
+5. **数据库重置**：`npm run seed` 会删除并重建 `huidu` 数据库，生产环境请勿使用。
 
 ---
 
@@ -123,15 +125,21 @@ npm run dev
 | `demo/server/seed/seed.sql` | 种子数据 |
 | `demo/server/seed/seed.js` | 一键初始化数据库 |
 | `demo/client/.env` | 前端 API 地址 |
-| `demo/client/vite.config.js` | Vite 配置（含 `/uploads` 代理） |
+| `demo/client/vite.config.js` | Vite 配置 |
 | `demo/client/src/router.jsx` | 前端路由 |
 | `demo/client/src/api/*.js` | 前端 API 封装 |
+| `demo/client/src/api/mockData.js` | 静态版 Mock 数据 |
 | `demo/client/src/pages/*.jsx` | 前端页面 |
+| `demo/client/public/uploads/` | 静态版图片资源 |
 | `demo/client/src/index.css` | 全局样式（固定 App 尺寸） |
+| `.github/workflows/deploy-gh-pages-branch.yml` | GitHub Pages 分支部署工作流 |
+| `.github/workflows/deploy-demo.yml` | GitHub Actions Source 部署工作流（备用） |
 | `demo/README.md` | Demo 运行说明 |
-| `docs/CO-WORKING-REVIEW.md` | 本次开发协作复盘 |
+| `demo/STATIC-DEPLOY.md` | 静态版部署说明 |
+| `demo/HANDOFF.md` | 本文件 |
+| `docs/CO-WORKING-REVIEW.md` | 开发协作复盘 |
 | `README.md` | 项目总览（含 Demo 介绍） |
 
 ---
 
-*生成时间：2026-07-02*
+*生成时间：2026-07-07（静态版已部署至 GitHub Pages）*
