@@ -1,8 +1,8 @@
 # 汇读 Demo 协作复盘
 
 > 角色：实习技术产品经理（你）+ AI 工程助手
-> 时间：2026-07-02
-> 范围：`demo/` 前后端联调、 bug 修复与体验优化
+> 时间：2026-07-02 ~ 2026-07-08
+> 范围：`demo/` 前后端联调、静态版部署、bug 修复与体验优化
 
 ---
 
@@ -30,6 +30,7 @@
 | 12   | 修复首页分类文字与图标对齐                    | `demo/client/src/pages/Home.jsx`       | ✅ 已解决 |
 | 13   | 移除书城首页无意义返回箭头                    | `demo/client/src/pages/Home.jsx`       | ✅ 已解决 |
 | 14   | 为“聒聒”设置本地头像                        | `demo/server/seed/seed.js`             | ✅ 已解决 |
+| 15   | 修复 GitHub Pages 静态版图片 404              | `demo/client/src/api/mockData.js`<br>`demo/client/src/api/request.js` | ✅ 已解决 |
 
 ---
 
@@ -111,6 +112,17 @@
   3. 重新触发工作流后，`pages build and deployment` 与 `Deploy Static Demo to gh-pages Branch` 均成功，站点可访问。
 - **状态**：✅ 已解决
 
+### 问题 11：GitHub Pages 静态版 Demo 图片无法显示
+
+- **现象**：静态版 Demo 部署到 `https://iscyh-hub.github.io/book-app-design/` 后，封面、分类图标、用户头像均无法显示；本地前后端联调时图片正常。
+- **根因**：GitHub Pages 将站点部署在仓库子路径 `/book-app-design/` 下，而 `mockData.js` 中图片路径写成了根目录绝对路径 `/uploads/...`，浏览器解析为 `github.io/uploads/...`，导致 404。
+- **解决**：
+  1. 在 `demo/client/src/api/mockData.js` 中添加 `asset()` 辅助函数，使用 Vite 的 `import.meta.env.BASE_URL` 拼接资源路径：
+     - 本地开发时 `BASE_URL` 为 `/`，图片路径为 `/uploads/...`；
+     - GitHub Pages 构建时 `BASE_URL` 为 `/book-app-design/`，图片路径为 `/book-app-design/uploads/...`。
+  2. 同步修复 `demo/client/src/api/request.js` 中 401 跳转 `/login` 的硬编码路径，改为 `import.meta.env.BASE_URL + 'login'`，避免登录页在子路径部署下也跳错。
+- **状态**：✅ 已解决
+
 ---
 
 ## 四、待后续决策/未彻底闭环事项
@@ -141,6 +153,7 @@
 3. **真机演示要提前考虑固定尺寸**：如果在桌面浏览器演示移动 App，尽早把 `max-width` 和容器居中定下来，避免反复调整多个组件。
 4. **本地资源路径要统一**：静态资源统一走 `/uploads`，并通过 dev proxy 或 CDN 域名解决前后端端口不一致问题，避免前端代码里写死后端地址。
 5. **GitHub Pages 部署优先选“从分支部署”**：新版 Pages 设置页对自定义工作流引导不够直观，建议直接用 `gh-pages` 分支 + `peaceiris/actions-gh-pages` 工作流，设置页有明确的 Save 按钮，成功率更高。
+6. **子路径部署下要避免硬编码根路径**：当站点部署在 GitHub Pages 等子路径（如 `/book-app-design/`）时，图片、跳转链接等静态资源应使用 Vite 的 `import.meta.env.BASE_URL` 动态拼接，避免本地正常、线上 404。
 
 ---
 
