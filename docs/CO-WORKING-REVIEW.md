@@ -94,14 +94,31 @@
   - 前端：`cd /d f:\本科\毕设\prd\demo\client && npm run dev`
 - **状态**：✅ 已解决
 
+### 问题 10：GitHub Pages 自动部署失败 / Pages 设置界面找不到 Save
+
+- **现象**：
+  1. 将静态版 Demo push 到 `main` 后，收到 GitHub 邮件提示 `Deploy Static Demo to GitHub Pages` 工作流失败。
+  2. 进入仓库 **Settings → Pages** 后，界面显示的是 `Use a suggested workflow, browse all workflows, or create your own`，并列出 `GitHub Pages Jekyll` / `Static HTML` 两个建议工作流，找不到明确的 Save 按钮。
+- **根因**：
+  1. 仓库此前未启用 GitHub Pages，导致 `actions/deploy-pages` 无法部署。
+  2. GitHub 新版 Pages 设置页默认引导用户选择建议工作流，而我们已有的自定义工作流文件（`.github/workflows/deploy-demo.yml`）没有出现在该引导页中，造成困惑。
+- **解决**：
+  1. 改为**从分支部署**方案：新增 `.github/workflows/deploy-gh-pages-branch.yml`，每次 push 到 `main` 时自动构建 `demo/client` 并将 `dist/` 推送到 `gh-pages` 分支。
+  2. 在 **Settings → Pages** 中：
+     - **Source** 选择 **Deploy from a branch**
+     - **Branch** 选择 `gh-pages` / `/(root)`
+     - 点击 **Save**
+  3. 重新触发工作流后，`pages build and deployment` 与 `Deploy Static Demo to gh-pages Branch` 均成功，站点可访问。
+- **状态**：✅ 已解决
+
 ---
 
 ## 四、待后续决策/未彻底闭环事项
 
-1. **部署与 HTTPS**
+1. **部署**
 
-   - 当前为本地 HTTP 演示，云服务器部署后再配 HTTPS。
-   - 状态：⏸ 未在本次处理
+   - ✅ 静态版 Demo 已通过 GitHub Pages 部署：`https://iscyh-hub.github.io/book-app-design/`
+   - ⏸ 云服务器 + 自定义域名 + HTTPS 部署尚未处理，如需正式产品化再考虑。
 2. **未实现模块**
 
    - 购物车、订单、支付、论坛仍为占位或未实现。
@@ -123,14 +140,16 @@
 2. **MVP 边界要清晰**：封面、分类图、头像属于“演示体验”，可晚于核心接口；但接口 500 属于阻塞性问题，必须优先修。
 3. **真机演示要提前考虑固定尺寸**：如果在桌面浏览器演示移动 App，尽早把 `max-width` 和容器居中定下来，避免反复调整多个组件。
 4. **本地资源路径要统一**：静态资源统一走 `/uploads`，并通过 dev proxy 或 CDN 域名解决前后端端口不一致问题，避免前端代码里写死后端地址。
+5. **GitHub Pages 部署优先选“从分支部署”**：新版 Pages 设置页对自定义工作流引导不够直观，建议直接用 `gh-pages` 分支 + `peaceiris/actions-gh-pages` 工作流，设置页有明确的 Save 按钮，成功率更高。
 
 ---
 
 ## 六、当前可访问地址
 
-- 前端：`http://localhost:5173`
-- 后端：`http://localhost:3001`
-- 测试账号：`test / 123456`（昵称：聒聒）
+- **线上静态版 Demo**：`https://iscyh-hub.github.io/book-app-design/`
+- **本地开发前端**：`http://localhost:5173`
+- **本地开发后端**：`http://localhost:3001`
+- **测试账号**：`test / 123456`（昵称：聒聒）
 
 ## 七、项目重新启动命令
 

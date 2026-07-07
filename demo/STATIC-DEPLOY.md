@@ -10,7 +10,9 @@
 2. **图片本地化**：将 `demo/server/uploads/` 复制到 `demo/client/public/uploads/`，打包后随前端一起发布
 3. **路由改为 HashRouter**：解决 GitHub Pages 等静态托管的刷新 404 问题
 4. **移除后端代理**：`vite.config.js` 中删除 `/uploads` 代理配置
-5. **GitHub Actions 自动部署**：新增 `.github/workflows/deploy-demo.yml`，推送到 `main` 分支后自动部署到 GitHub Pages
+5. **GitHub Actions 自动部署**：新增两套工作流：
+   - `.github/workflows/deploy-gh-pages-branch.yml`（推荐）：推送到 `main` 后自动构建并推送到 `gh-pages` 分支
+   - `.github/workflows/deploy-demo.yml`（备用）：使用 GitHub Actions 作为 Source 直接部署
 
 ---
 
@@ -40,32 +42,29 @@ npm run preview
 
 ---
 
-## 部署到 GitHub Pages（推荐）
+## 部署到 GitHub Pages（推荐：从分支部署）
 
-### 方式一：GitHub Actions 自动部署（已配置）
+这是实际验证过、设置页有明确 Save 按钮的方案。
 
-1. 把当前代码 push 到 GitHub 仓库的 `main` 分支
-2. 进入仓库 **Settings → Pages**
+1. 确保仓库里有 `.github/workflows/deploy-gh-pages-branch.yml` 文件
+2. push 任意提交到 `main` 分支，触发工作流
+3. 进入仓库 **Settings → Pages**
+4. **Build and deployment** 区域：
+   - **Source** 选择 **Deploy from a branch**
+   - **Branch** 选择 `gh-pages` / `/(root)`
+5. 点击 **Save**
+6. 等待 1-2 分钟，访问 `https://iscyh-hub.github.io/book-app-design/`
+
+> 如果修改了仓库名，同步修改 `.github/workflows/deploy-gh-pages-branch.yml` 中的 `VITE_BASE_URL`。
+
+## 部署到 GitHub Pages（备用：GitHub Actions 作为 Source）
+
+1. push 代码到 `main`
+2. 进入 **Settings → Pages**
 3. **Source** 选择 **GitHub Actions**
-4. 等待 Actions 运行完成，访问 `https://<你的用户名>.github.io/book-app-design/`
+4. 忽略建议的 Jekyll / Static HTML 工作流，直接前往 Actions 页面运行 `Deploy Static Demo to GitHub Pages`
 
-> 注意：如果你修改了仓库名，需要同步修改 `.github/workflows/deploy-demo.yml` 中的 `VITE_BASE_URL`。
-
-### 方式二：本地手动推送到 gh-pages 分支
-
-```bash
-# 1. 安装 gh-pages 工具
-cd demo/client
-npm install -D gh-pages
-
-# 2. 在 demo/client/package.json 中添加：
-# "homepage": "https://<你的用户名>.github.io/book-app-design/",
-# "scripts": { "deploy": "gh-pages -d dist" }
-
-# 3. 构建并部署
-npm run build
-npm run deploy
-```
+> 注意：新版 GitHub Pages 设置页可能把自定义工作流藏在建议工作流之后，找不到 Save 按钮时建议改用上面的"从分支部署"。
 
 ---
 

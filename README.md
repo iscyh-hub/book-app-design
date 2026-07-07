@@ -277,9 +277,11 @@ npm run dev
 - 前端接口已改为本地 Mock 数据
 - 图片资源已打包进前端
 - 路由已改为 HashRouter，支持 GitHub Pages / Vercel / Netlify 等静态托管
-- 已配置 GitHub Actions，push 到 `main` 后自动部署到 GitHub Pages
+- 已配置 GitHub Actions，推送到 `main` 后自动构建并部署到 `gh-pages` 分支
 
-**部署方式**：
+**线上地址**：`https://iscyh-hub.github.io/book-app-design/`
+
+**本地构建**：
 
 ```bash
 cd demo/client
