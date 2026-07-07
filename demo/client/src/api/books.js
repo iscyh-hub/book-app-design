@@ -1,6 +1,11 @@
-import request from './request.js'
+import {
+  mockGetCategories,
+  mockGetBooks,
+  mockGetBookDetail,
+  mockGetChapter,
+} from './mockData.js'
 
-export const getCategories = () => request.get('/api/categories')
-export const getBooks = (params) => request.get('/api/books', { params })
-export const getBookDetail = (id) => request.get(`/api/books/${id}`)
-export const getChapter = (bookId, chapterId) => request.get(`/api/books/${bookId}/chapters/${chapterId}`)
+export const getCategories = () => mockGetCategories()
+export const getBooks = (params) => mockGetBooks(params)
+export const getBookDetail = (id) => mockGetBookDetail(id)
+export const getChapter = (bookId, chapterId) => mockGetChapter(bookId, chapterId)
