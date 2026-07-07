@@ -1,11 +1,14 @@
 // 汇读 Demo 静态版 Mock 数据
 // 数据来源：demo/server/seed/seed.sql
 
+// 静态资源路径适配 Vite base 配置（本地为 /，GitHub Pages 为 /book-app-design/）
+const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
+
 const MOCK_USER = {
   user_id: 1,
   username: 'test',
   nickname: '聒聒',
-  avatar: '/uploads/avatars/头像.jpg',
+  avatar: asset('uploads/avatars/头像.jpg'),
   email: 'test@huidu.example.com',
   phone: '13800138000',
   is_vip: 0,
@@ -15,11 +18,11 @@ const MOCK_USER = {
 const MOCK_TOKEN = 'mock_token_huidu_demo_static'
 
 const CATEGORIES = [
-  { category_id: 1, parent_id: 0, name: '文学', icon: '/uploads/categories/文学.JPG', sort_order: 1, status: 1 },
-  { category_id: 2, parent_id: 0, name: '历史', icon: '/uploads/categories/历史.JPG', sort_order: 2, status: 1 },
-  { category_id: 3, parent_id: 0, name: '哲学', icon: '/uploads/categories/哲学.JPG', sort_order: 3, status: 1 },
-  { category_id: 4, parent_id: 0, name: '童书', icon: '/uploads/categories/童书.JPG', sort_order: 4, status: 1 },
-  { category_id: 5, parent_id: 0, name: '科普', icon: '/uploads/categories/科普.JPG', sort_order: 5, status: 1 },
+  { category_id: 1, parent_id: 0, name: '文学', icon: asset('uploads/categories/文学.JPG'), sort_order: 1, status: 1 },
+  { category_id: 2, parent_id: 0, name: '历史', icon: asset('uploads/categories/历史.JPG'), sort_order: 2, status: 1 },
+  { category_id: 3, parent_id: 0, name: '哲学', icon: asset('uploads/categories/哲学.JPG'), sort_order: 3, status: 1 },
+  { category_id: 4, parent_id: 0, name: '童书', icon: asset('uploads/categories/童书.JPG'), sort_order: 4, status: 1 },
+  { category_id: 5, parent_id: 0, name: '科普', icon: asset('uploads/categories/科普.JPG'), sort_order: 5, status: 1 },
 ]
 
 const BOOKS = [
@@ -27,7 +30,7 @@ const BOOKS = [
     book_id: 1,
     title: '简爱',
     author: '夏洛蒂·勃朗特',
-    cover: '/uploads/covers/简爱.png',
+    cover: asset('uploads/covers/简爱.png'),
     category_id: 1,
     price: 19.90,
     original_price: 39.80,
@@ -43,7 +46,7 @@ const BOOKS = [
     book_id: 2,
     title: '傲慢与偏见',
     author: '简·奥斯汀',
-    cover: '/uploads/covers/你是人间四月天.png',
+    cover: asset('uploads/covers/你是人间四月天.png'),
     category_id: 1,
     price: 18.50,
     original_price: 36.00,
@@ -59,7 +62,7 @@ const BOOKS = [
     book_id: 3,
     title: '论语',
     author: '孔子弟子及再传弟子',
-    cover: '/uploads/covers/论语.png',
+    cover: asset('uploads/covers/论语.png'),
     category_id: 3,
     price: 12.00,
     original_price: 24.00,
@@ -75,7 +78,7 @@ const BOOKS = [
     book_id: 4,
     title: '资治通鉴',
     author: '司马光',
-    cover: '/uploads/covers/资治通鉴.png',
+    cover: asset('uploads/covers/资治通鉴.png'),
     category_id: 2,
     price: 29.90,
     original_price: 58.00,
@@ -91,7 +94,7 @@ const BOOKS = [
     book_id: 5,
     title: '格列佛游记',
     author: '乔纳森·斯威夫特',
-    cover: '/uploads/covers/格列佛游记.png',
+    cover: asset('uploads/covers/格列佛游记.png'),
     category_id: 4,
     price: 15.00,
     original_price: 30.00,
@@ -107,7 +110,7 @@ const BOOKS = [
     book_id: 6,
     title: '昆虫记',
     author: '法布尔',
-    cover: '/uploads/covers/奇妙的昆虫.png',
+    cover: asset('uploads/covers/奇妙的昆虫.png'),
     category_id: 5,
     price: 16.80,
     original_price: 33.60,

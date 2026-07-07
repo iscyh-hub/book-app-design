@@ -28,7 +28,7 @@ request.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('huidu_token')
-      window.location.href = '/login'
+      window.location.href = import.meta.env.BASE_URL + 'login'
     } else {
       Toast.show({ content: err.message || '网络错误', position: 'bottom' })
     }
